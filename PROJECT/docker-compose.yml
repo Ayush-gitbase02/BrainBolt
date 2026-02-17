@@ -1,0 +1,73 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      MONGO_URI: mongodb://mongo:27017/brainbolt
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://backend:4000
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL: http://backend:4000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "mongodb://localhost:27017/admin",
+          "--eval",
+          "db.runCommand({ ping: 1 }).ok",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  seed:
+    build: ./backend
+    command: node src/scripts/seed.js
+    environment:
+      MONGO_URI: mongodb://mongo:27017/brainbolt
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  mongo_data:
+  redis_data:
