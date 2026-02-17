@@ -5,6 +5,7 @@ One question at a time. Difficulty increases after correct answers and decreases
 ---
 
 **👉 Full step-by-step instructions:** see **[RUNNING_GUIDE.md](./RUNNING_GUIDE.md)** for what to install, what to fill in, and how to run (Docker or without Docker).
+**👉 For video-guide:** see VIDEO
 
 ---
 
